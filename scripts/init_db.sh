@@ -27,17 +27,18 @@ if [[ -z "${SKIP_DOCKER}" ]]
 then
 docker run \
   --rm \
+  --net host \
   -e POSTGRES_USER=${DB_USER} \
   -e POSTGRES_PASSWORD=${DB_PASSWORD} \
   -e POSTGRES_DB=${DB_NAME} \
-  -p "${DB_PORT}":5432 \
+  -p 127.0.0.1:"${DB_PORT}":5432 \
   -d postgres \
   postgres -N 1000
 fi
   # ^ Increased maximum number of connections for testing purposes
   # Keep pinging Postgres until it's ready to accept commands
 export PGPASSWORD="${DB_PASSWORD}"
-until psql -h "localhost" -U "${DB_USER}" -p "${DB_PORT}" -d "postgres" -c '\q'; do
+until psql -h "127.0.0.1" -U "${DB_USER}" -p "${DB_PORT}" -d "postgres" -c '\q'; do
   >&2 echo "Postgres is still unavailable - sleeping"
 sleep 1 
 done
