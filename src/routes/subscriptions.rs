@@ -12,19 +12,19 @@ pub struct FormData {
 }
 
 #[tracing::instrument(
-    name = "Adding a new subscriber",
-    skip(form,connection_pool),
-    fields(
-        subscriber_email = %form.email,
-        subscriber_name = %form.name
-    )
+name = "Adding a new subscriber",
+skip(form,connection_pool),
+fields(
+subscriber_email = %form.email,
+subscriber_name = %form.name
+)
 )]
 pub async fn subscribe(
     form: web::Form<FormData>,
-    connection_pool: web::Data<PgPool>,
+   connection_pool: web::Data<PgPool>,
 ) -> HttpResponse {
-    match insert_subscriber(&connection_pool, &form).await {
-        Ok(_) => HttpResponse::Ok().finish(),
+match insert_subscriber(&connection_pool, &form).await {
+    Ok(_) => HttpResponse::Ok().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }
@@ -36,18 +36,18 @@ pub async fn subscribe(
 pub async fn insert_subscriber(pool: &PgPool, form: &FormData) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
-    INSERT INTO subscriptions (id, email, name, subscribed_at) VALUES ($1,$2,$3,$4)
-    "#,
-        Uuid::new_v4(),
-        form.email,
-        form.name,
+INSERT INTO subscriptions (id, email, name, subscribed_at) VALUES ($1,$2,$3,$4)
+"#,
+Uuid::new_v4(),
+form.email,
+    form.name,
         Utc::now(),
-    )
-    .execute(pool)
-    // First attach the instrumentation, then await it
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
+)
+.execute(pool)
+// First attach the instrumentation, then await it
+.await
+.map_err(|e| {
+    tracing::error!("Failed to execute query: {:?}", e);
         e
     })?;
     Ok(())
